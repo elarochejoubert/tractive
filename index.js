@@ -42,7 +42,7 @@ async function authenticate() {
         const data = await res.json();
         accountDetails.token = data.access_token;
         accountDetails.uid = data.user_id;
-        gloOpts = {
+        globalThis.gloOpts = {
             method: "GET",
             hostname: "graph.tractive.com",
             path: ``,

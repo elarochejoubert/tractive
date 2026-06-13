@@ -1,0 +1,80 @@
+<script type="text/javascript">
+    const TRACKER_OPS = [
+        'getTrackerLocation', 'getTrackerHardware', 'getTrackerHistory',
+        'liveOn', 'liveOff', 'LEDOn', 'LEDOff', 'buzzerOn', 'buzzerOff'
+    ];
+
+    RED.nodes.registerType('tractive-tracker', {
+        category: 'Tractive',
+        color: '#6dbfde',
+        defaults: {
+            name:      { value: '' },
+            config:    { value: '', type: 'tractive-config', required: true },
+            operation: { value: 'getTrackerHardware', required: true },
+            trackerID: { value: '', validate: function(v) {
+                const op = document.getElementById('node-input-operation');
+                if (op && TRACKER_OPS.includes(op.value)) return v && v.trim().length > 0;
+                return true;
+            }}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-paw',
+        label: function () {
+            return this.name || this.operation || 'tractive';
+        },
+        oneditprepare: function () {
+            function toggleTrackerID() {
+                const op = document.getElementById('node-input-operation').value;
+                const row = document.getElementById('row-trackerID');
+                row.style.display = TRACKER_OPS.includes(op) ? '' : 'none';
+            }
+            document.getElementById('node-input-operation').addEventListener('change', toggleTrackerID);
+            toggleTrackerID();
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="tractive-tracker">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-user"></i> Account</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row" id="row-trackerID">
+        <label for="node-input-trackerID"><i class="fa fa-map-marker"></i> Tracker ID</label>
+        <input type="text" id="node-input-trackerID" placeholder="Find in Tractive app → Settings → Device">
+    </div>
+    <div class="form-row">
+        <label for="node-input-operation"><i class="fa fa-cog"></i> Operation</label>
+        <select id="node-input-operation" style="width:70%">
+            <optgroup label="Tracker">
+                <option value="getTrackerHardware">Get hardware (battery, charging)</option>
+                <option value="getTrackerLocation">Get location</option>
+                <option value="getTrackerHistory">Get history</option>
+            </optgroup>
+            <optgroup label="Commands">
+                <option value="liveOn">Live tracking ON</option>
+                <option value="liveOff">Live tracking OFF</option>
+                <option value="LEDOn">LED ON</option>
+                <option value="LEDOff">LED OFF</option>
+                <option value="buzzerOn">Buzzer ON</option>
+                <option value="buzzerOff">Buzzer OFF</option>
+            </optgroup>
+            <optgroup label="Account">
+                <option value="getPets">Get pets</option>
+                <option value="getAllTrackers">Get all trackers</option>
+            </optgroup>
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="tractive-tracker">
+    <p>Calls the Tractive API for a configured tracker.</p>
+    <p><b>Tracker ID:</b> find it in the Tractive app under Settings → Device → Device ID.
+    Can be overridden at runtime with <code>msg.trackerID</code>.</p>
+    <p>For <b>Get history</b>, set <code>msg.from</code> and <code>msg.to</code> (Unix timestamps in ms).</p>
+</script>

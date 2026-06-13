@@ -1,0 +1,7 @@
+test/
+deploy.sh
+check-connection.js
+.github/
+.claude/
+.qodo/
+*.tgz

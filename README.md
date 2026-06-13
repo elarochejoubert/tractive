@@ -1,120 +1,112 @@
-This is a simple Tractive GPS tracker API wrapper to make multiple types of requests to Tractive and recieve data on your account and pet(s).
+# node-red-contrib-tractive
 
-### Contents
-- [Getting Started](#Getting-Started)
-- [All functions](#All-Functions)
-- [Other](#Other)
+A Node-RED palette for the [Tractive](https://tractive.com) GPS tracker API. Monitor your pet's battery level, location, and history — and control LED and buzzer — directly from your flows.
 
-### Getting Started
+## Installation
 
-```js
-const tractive = require('tractive');
+Install via the Node-RED Palette Manager (search for `node-red-contrib-tractive`), or from the command line in your Node-RED data directory:
 
-/*
-Check if Tractive has authenticated:
-Return true if successful and connected or returns false is not connected.
-*/
-tractive.connect('TRACTIVE_ACCOUNT_EMAIL', 'TRACTIVE_ACCOUNT_PASSWORD')
-
-/*
-Check if Tractive has authenticated:
-Returns true if the tractive.connect() is successful and connected.
-*/
-tractive.isAuthenticated() ? true : false;
-
-tractive.getAllTrackers().then(function(trackers) {
-    /*
-    trackers = [
-        {
-            "_id":"ABCDEFGH",
-            "_type":"tracker",
-            "_version":"0000000e-0000000-0000000000"
-        }
-    ]
-    */
-});
-
-/*
-Gets a defined tracker and returns its latest report data along with address.
-*/
-tractive.getTrackerLocation("ABCDEFGH").then(function(tracker) {
-    /*
-    tracker = {
-        time: 1669530259,
-        time_rcvd: 1669530274,
-        sensor_used: 'GPS',
-        pos_status: [ 'STATIONARY_FIX' ],
-        latlong: [ -30.234736, 129.16563 ],
-        speed: 0,
-        pos_uncertainty: 14,
-        _id: 'ABCDEFGH',
-        _type: 'device_pos_report',
-        _version: '4daf8f322',
-        altitude: 121,
-        report_id: '00000000000000',
-        nearby_user_id: null,
-        power_saving_zone_id: null,
-        address: {
-            street: 'My Street Road',
-            house_number: '10',
-            zip_code: '0000',
-            city: 'Anyville',
-            country: 'AU',
-            full_address: 'My Street Road 10, 0000 Anyville'
-        }
-    }
-    */
-});
-
-// Turn on live tracking
-tractive.liveOn("ABCDEFGH").then(function(tracker) {
-    /*
-    tracker = {
-        active: false,
-        started_at: null,
-        timeout: 300,
-        remaining: 0,
-        pending: true,
-        reconnecting: false
-        }
-    */
-});
+```bash
+npm install node-red-contrib-tractive
 ```
 
-### All Functions
+## Nodes
+
+### tractive-config
+
+A configuration node that stores your Tractive account credentials. One config node per account — shared across all `tractive-tracker` nodes in your flow.
+
+| Field    | Description                         |
+|----------|-------------------------------------|
+| Email    | Your Tractive account email         |
+| Password | Your Tractive account password      |
+
+Authentication is performed automatically when the first operation runs.
+
+---
+
+### tractive-tracker
+
+Calls the Tractive API for a specific tracker. Configure the **Tracker ID** once (find it in the Tractive app under **Settings → Device → Device ID**) and select the operation.
+
+#### Operations
+
+| Operation               | Description                                              |
+|-------------------------|----------------------------------------------------------|
+| Get hardware            | Battery level and charging state                         |
+| Get location            | Latest GPS fix with coordinates and address              |
+| Get history             | Location history (requires `msg.from` and `msg.to`)      |
+| Live tracking ON / OFF  | Enable or disable 2.5-second position updates            |
+| LED ON / OFF            | Trigger the tracker's LED light                          |
+| Buzzer ON / OFF         | Trigger the tracker's buzzer                             |
+| Get pets                | List all pets on the account                             |
+| Get all trackers        | List all trackers on the account                         |
+
+#### Runtime overrides
+
+| Property        | Description                                    |
+|-----------------|------------------------------------------------|
+| `msg.trackerID` | Overrides the Tracker ID set in the node       |
+| `msg.operation` | Overrides the operation set in the node        |
+| `msg.from`      | Start timestamp in ms (Get history only)       |
+| `msg.to`        | End timestamp in ms (Get history only)         |
+
+#### Output
+
+`msg.payload` contains the raw API response object.
+
+#### Example — battery monitor
+
+```
+[inject every 5 min] → [tractive-tracker: getTrackerHardware] → [msg.payload.battery_level] → [display]
+```
+
+## JavaScript library
+
+The package also works as a standalone ESM library:
 
 ```js
+import tractive from 'node-red-contrib-tractive';
+
+await tractive.connect('email@example.com', 'password');
+
+const hw = await tractive.getTrackerHardware('YOUR_TRACKER_ID');
+console.log(hw.battery_level); // e.g. 85
+
+const location = await tractive.getTrackerLocation('YOUR_TRACKER_ID');
+console.log(location.latlong); // e.g. [-33.86, 151.20]
+```
+
+### All functions
+
+```js
+// Account
 getAccountInfo()
 getAccountSubscriptions()
 getAccountSubscription(subscriptionID)
 getAccountShares()
 
+// Pet
 getPets()
-getPet(PetID)
+getPet(petID)
 
+// Tracker
 getAllTrackers()
 getTracker(trackerID)
-getTrackerHistory(trackerID, from, to) // 'from' and 'to' are Date() functions or timestamps (in ms).
-getTrackerLocation(trackerID) // Get the latest report that the tracker uploaded.
-getTrackerHardware(trackerID) // Get the latest hardware report that was sent. This includes battery levels.
+getTrackerLocation(trackerID)
+getTrackerHardware(trackerID)       // includes battery_level, charging_state
+getTrackerHistory(trackerID, from, to)  // from/to are timestamps in ms
 
-liveOn(trackerID) // Turns on live tracking
-liveOff(trackerID) // Turns off live tracking
-LEDOn(trackerID) // Turns on LED light
-LEDOff(trackerID) // Turns off LED light
-buzzerOn(trackerID) // Turns on buzzer sound
-buzzerOff(trackerID) // Turns off buzzer sound
+// Commands
+liveOn(trackerID)
+liveOff(trackerID)
+LEDOn(trackerID)
+LEDOff(trackerID)
+buzzerOn(trackerID)
+buzzerOff(trackerID)
 ```
 
----
+## Notes
 
-### Other
-
-- [Suggest a new feature](https://github.com/FAXES/tractive/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=)
-- [Let us know of an issue](https://github.com/FAXES/tractive/issues/new?assignees=&labels=bug&template=bug_report.md&title=)
-
-Created by [Weblutions](https://weblutions.com)
-
-**Disclaimer**
-*This personal project is maintained in spare time and has no business goal. Terms and logos related to Tractive are respective of their holders. This is not maintained or created by Tractive.*
-<small>However, Tractive you're welcome to have the package name if you ever have an official API 💖</small>
+- Rate-limited requests (HTTP 4006) are automatically retried up to 3 times with a 2-second delay.
+- This package is not affiliated with or maintained by Tractive. Tractive is a registered trademark of Tractive GmbH.

@@ -1,7 +1,7 @@
 {
-  "name": "tractive",
-  "version": "1.2.1",
-  "description": "A Tractive API wrapper, using tractive.com services.",
+  "name": "node-red-contrib-tractive",
+  "version": "1.0.0",
+  "description": "Node-RED palette for the Tractive GPS tracker API — monitor battery, location, and control LED/buzzer.",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -9,19 +9,32 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FAXES/tractive.git"
+    "url": "git+https://github.com/elarochejoubert/tractive.git"
   },
   "keywords": [
+    "node-red",
     "tractive",
-    "tracking",
-    "GPS"
+    "GPS",
+    "tracker",
+    "pet",
+    "tracking"
   ],
-  "author": "Weblutions",
+  "node-red": {
+    "version": ">=3.0.0",
+    "nodes": {
+      "tractive-config": "nodes/tractive-config.cjs",
+      "tractive-tracker": "nodes/tractive-tracker.cjs"
+    }
+  },
+  "author": "Edouard Laroche-Joubert",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/FAXES/tractive/issues"
+    "url": "https://github.com/elarochejoubert/tractive/issues"
   },
-  "homepage": "https://github.com/FAXES/tractive#readme",
+  "homepage": "https://github.com/elarochejoubert/tractive#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "undici": "^7.0.0"
   }

@@ -26,6 +26,7 @@ globalThis.isAuthenticated = function () {
 
 // Set up mock agent and interceptors
 const commandsMock = new MockAgent();
+commandsMock.disableNetConnect();
 const mockPool = commandsMock.get('https://graph.tractive.com');
 
 // Set up all mock interceptors
@@ -97,6 +98,20 @@ describe('Commands', () => {
 
   test('BuzzerOff', async () => {
       const result = await commands.BuzzerOff('tracker-1');
+      assert.deepStrictEqual(result, { status: 'success' });
+  });
+
+  test('retries on rate limit (4006) and returns success', async () => {
+      mockPool.intercept({
+          path: `/4/tracker/tracker-1/command/led_control/on`,
+          method: 'GET'
+      }).reply(200, { code: 4006, category: 'REQUEST', message: 'Rate limit for this resource exceeded.', detail: null });
+      mockPool.intercept({
+          path: `/4/tracker/tracker-1/command/led_control/on`,
+          method: 'GET'
+      }).reply(200, { status: 'success' });
+
+      const result = await commands.LEDOn('tracker-1');
       assert.deepStrictEqual(result, { status: 'success' });
   });
 });
